@@ -15,6 +15,7 @@ import pickle
 
 # Set device
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+threshold = 0.5
 
 # Load ProtBERT model and tokenizer with gradient checkpointing for memory efficiency
 tokenizer = BertTokenizer.from_pretrained('Rostlab/prot_bert_bfd', do_lower_case=False)
@@ -148,7 +149,7 @@ def run_predictions(struct_dir, model, output_file, gonames, goids, batch_size=8
                     out = model(protbert_features, adjacency_info, torch.tensor([0] * len(seq), dtype=torch.long, device=device))
 
                 # Convert logits to probabilities and get predictions
-                pred = torch.sigmoid(out) > 0.5
+                pred = torch.sigmoid(out) > threshold 
 
                 # Extract indices where the prediction is True
                 true_indices = torch.nonzero(pred, as_tuple=False).squeeze().cpu().numpy()
@@ -183,7 +184,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-struc_dir', type=str, default='examples/structure_files', help='Directory containing cif files')
     parser.add_argument('-seqs', type=str, default='examples/predictions_seqs.fasta', help='FASTA file containing sequences')
-    parser.add_argument('-model_path', type=str, default="model_and_weight_files/model_weights_60_epochs_64_batch_size.pth", help='Path to the trained model weights')
+    parser.add_argument('-model_path', type=str, default="model_and_weight_files/model_weights_100_epochs_128_batch_size_2_layers.pth", help='Path to the trained model weights')
     parser.add_argument('-output', type=str, default='examples/predictions.csv', help='Output CSV file for predictions')
     parser.add_argument('-annot_dict', type=str, default='preprocessing/data/annot_dict.pkl', help='Path to the annotation dictionary')
     args = parser.parse_args()
@@ -198,7 +199,7 @@ if __name__ == '__main__':
     # Load GCN model
     model = torch.load(args.model_path)
     # Path to the model info JSON file
-    MODEL_INFO_PATH = "model_and_weight_files/model_info.json"
+    MODEL_INFO_PATH = "model_and_weight_files/model_info_2_layers.json"
 
     # Step 1: Load the model information from the JSON file
     with open(MODEL_INFO_PATH, 'r') as f:

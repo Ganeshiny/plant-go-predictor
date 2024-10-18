@@ -11,12 +11,12 @@ import json
 
 # Constants
 THRESHOLD = 0.5
-BATCH_SIZE = 64
-EPOCHS = 60
-BEST_MODEL_PATH = f'model_and_weight_files/model_weights_{EPOCHS}_epochs_{BATCH_SIZE}_batch_size.pth'
+BATCH_SIZE = 128
+EPOCHS = 100
+BEST_MODEL_PATH = f'model_and_weight_files/model_weights_{EPOCHS}_epochs_{BATCH_SIZE}_batch_size_2_layers.pth'
 PATH = "model_and_weight_files/model.pth"
 CLASS_WEIGHT_PATH = "model_and_weight_files/alpha_weights.pkl"
-MODEL_INFO_PATH = "model_and_weight_files/model_info.json"  # Path to save model info
+MODEL_INFO_PATH = "model_and_weight_files/model_info_2_layers.json"  # Path to save model info
 
 # Device
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -42,12 +42,12 @@ test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
 # Calculate alpha
 #alpha = calculate_class_weights(dataset, device)
 #save_alpha_weights(alpha, CLASS_WEIGHT_PATH)
-#alpha = load_alpha_weights(CLASS_WEIGHT_PATH)
+alpha = load_alpha_weights(CLASS_WEIGHT_PATH)
 print(f"Alpha weights:{alpha}")
 
 # Model Setup
 input_size = len(pdb_protBERT_dataset[0].x[0])
-hidden_sizes = [1000, 912, 820]
+hidden_sizes = [1000, 500]
 output_size = pdb_protBERT_dataset.num_classes
 model = GCN(input_size, hidden_sizes, output_size)
 model.to(device)
@@ -65,7 +65,7 @@ torch.save(model.state_dict(), PATH)
 
 # Criterion and Optimizer
 criterion = FocalLoss(alpha=alpha)
-optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
 
 def train():
     model.train()
