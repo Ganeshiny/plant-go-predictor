@@ -108,6 +108,11 @@ def cif2cmap(pdb, chain, seq, pdir):
 
 def write_annot_npz(prot, prot2seq, struct_dir, is_csm=True):
     print("Debug prot:", prot)
+
+    if len(prot.split('_')) > 1:
+        is_csm = True
+    else:
+        is_csm = False
     
     if is_csm:
         # pdb should be everything before the last underscore
