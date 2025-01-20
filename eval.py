@@ -26,10 +26,10 @@ train_dataset, test_dataset = train_test_split(dataset, test_size=0.2, random_st
 
 # Define model architecture and load pre-trained weights
 input_size = len(dataset[0].x[0])
-hidden_sizes = [1000, 912, 820]
+hidden_sizes = [1000, 912]
 output_size = pdb_protBERT_dataset.num_classes
 model = GCN(input_size, hidden_sizes, output_size)
-model.load_state_dict(torch.load('model_and_weight_files/model_weights_60_epochs_64_batch_size.pth'))
+model.load_state_dict(torch.load('model_and_weight_files/model_weights_100_epochs_128_batch_size_2_layers.pth'))
 model.to(device)
 model.eval()
 

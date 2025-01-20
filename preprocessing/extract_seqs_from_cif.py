@@ -20,7 +20,7 @@ import numpy as np
 
 exp_evidence_codes = set(['EXP', 'IDA', 'IPI', 'IMP', 'IGI', 'IEP', 'TAS', 'IC', 'CURATED'])
 root_terms = set(['GO:0008150', 'GO:0003674', 'GO:0005575'])
-domain_terms = set(['GO:0048316'])
+domain_terms = 'GO:0008150'
 
 def get_seqs(fname):
     with gzip.open(fname, "rt") as handle:
@@ -29,8 +29,6 @@ def get_seqs(fname):
         structure = parser.get_structure(pdb_id, handle)
         chains = {f"{pdb_id}_{chain.id}":seq1(''.join(residue.resname for residue in chain)) for chain in structure.get_chains()}
     return chains
-
-
 
 def write_seqs_from_cifdir(dirpath, fname):
     structure_dir = Path(dirpath)
@@ -81,9 +79,36 @@ def read_seqs_file(seqs_file):
     return handle'''
 
 def load_go_graph(fname):
+    """
+    Load the Gene Ontology graph and return it.
+    """
     go_graph = obonet.read_obo(fname)
-    print(f"DEBUG: {go_graph}, and the number of nodes: {len(go_graph.nodes)}")
+    print(f"Loaded GO graph with {len(go_graph.nodes)} nodes and {len(go_graph.edges)} edges.")
     return go_graph
+
+def create_subgraph(go_graph, parent_term):
+    """
+    Create a subgraph based on the given parent term.
+    
+    Parameters:
+    go_graph: The full Gene Ontology graph.
+    parent_term: The GO term from which the subgraph should be created.
+    
+    Returns:
+    A subgraph that includes the parent term and all its descendants.
+    """
+    if parent_term not in go_graph:
+        raise ValueError(f"Parent term {parent_term} not found in the GO graph.")
+    
+    # Get all descendants of the parent term (including the parent term itself)
+    child_terms = nx.ancestors(go_graph, parent_term)
+    child_terms.add(parent_term)  # Include the parent term in the subgraph
+
+    # Create the subgraph containing only the parent term and its descendants
+    subgraph = go_graph.subgraph(child_terms).copy()
+
+    print(f"Created subgraph with {len(subgraph.nodes)} nodes and {len(subgraph.edges)} edges.")
+    return subgraph
 
 def read_sifts(sifts_fname, pdb_chains, go_graph):
     pdb2go = {}
@@ -195,6 +220,7 @@ if __name__ == "__main__":
     ids = read_seqs_file(args.seqs).keys()
     print(ids)
     go_graph = load_go_graph(args.obo)
+    #sub_go_graph = create_subgraph(go_graph, domain_terms)
     pdb2seq = read_seqs_file(args.seqs)
     pdb2go, go2info = read_sifts(args.sifts, ids, go_graph)
     write_output_files(args.out, pdb2go, go2info, pdb2seq)
